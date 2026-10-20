@@ -35,6 +35,7 @@ python scripts/qa_verify.py --dir "驗證輸出" --analysis-dir "C:/Users/adminn
 5. [精度原則與 0.01 誤差解析](#-第五章精度原則與-001-誤差解析)
 6. [品質稽核與自動化驗證 (QA)](#-第六章品質稽核與自動化驗證-qa)
 7. [常見問題與故障排除 (FAQ)](#-第七章常見問題與故障排除-faq)
+8. [全書總裝與全七章整合升級 (Full Report Pipeline)](#-第八章全書總裝與全七章整合升級-full-report-pipeline)
 
 ---
 
@@ -280,6 +281,68 @@ python scripts/qa_verify.py --dir "./output" --analysis-dir "./data"
 * **Antigravity / Gemini CLI**：直接將資料夾置於 `.agents/skills/SAAA-4-6-chapter` 即可自動辨識。
 * **Cursor / Claude Desktop**：在專案提示詞中輸入：
   > 「請遵照 `SAAA-4-6-chapter/SKILL.md` 之操作規範，依本手冊流程產出第 4 章與第 6 章評量報告。」
+
+---
+
+## 🌟 第八章：全書總裝與全七章整合升級 (Full Report Pipeline)
+
+本系統已全面擴充升級，支援自第 1 章至第 7 章的完整產出與總裝組裝管線：
+
+### 1. 第一章背景最新規範：年度型新增自然科
+
+依據最新 115 年度學力檢測標準規範，**第一章第二段末尾針對年度型（國中小 3~8 年級）統一更新包含自然科之規範文案**：
+
+> **「107 年開始，<u>桃園市</u>等五縣市以委託形式，由<u>國立臺中教育大學測驗統計與適性學習研究中心</u>協助辦理縣市學生學習能力檢測試題研發暨資料分析工作，108 年起，改以中心自辦學力檢測研發，各縣市依需求參與形式運作，115 年度有<u>基隆市</u>、<u>新北市</u>、<u>桃園市</u>、<u>新竹縣</u>、<u>新竹市</u>、<u>苗栗縣</u>、<u>臺中市</u>、<u>南投縣</u>、<u>雲林縣</u>、<u>嘉義縣</u>、<u>嘉義市</u>、<u>臺南市</u>、<u>高雄市</u>、<u>屏東縣</u>、<u>花蓮縣</u>、<u>臺東縣</u>、<u>澎湖縣</u>以及<u>金門縣</u>等十八縣市共同參與，檢測對象為國民中小學三年級至八年級學生，<u>檢測科目包含國語文、數學、英語文和自然。</u>」**
+
+* **關鍵要求**：
+  1. 完整包含「國語文、數學、英語文和自然」四科。
+  2. 國民中小學「三年級至八年級」（非三至八年級）。
+  3. 中心全稱與 18 縣市名稱均自動加註中文標準「專名號」（單底線）。
+
+### 2. 統一 Master CLI 操作（`build_full_report.py`）
+
+可透過 `scripts/build_full_report.py` 執行全書總裝或分章節產出：
+
+```bash
+# 產出全書 1~7 章結案報告（以數學四年級為例）：
+python scripts/build_full_report.py \
+  --subject M \
+  --grade 4 \
+  --year 115 \
+  --chapters all \
+  --out-dir "結案報告輸出"
+
+# 分段產出模式（例如僅產出第一、二章行政骨架）：
+python scripts/build_full_report.py \
+  --subject C \
+  --grade 3 \
+  --chapters 1,2 \
+  --out-dir "行政輸出"
+
+# 結合 108 課綱 PDF 產出第五章（學習重點交叉表與能力分佈）：
+python scripts/build_full_report.py \
+  --subject S \
+  --grade 5 \
+  --chapters 5 \
+  --curriculum-pdf "自然科學領域.pdf" \
+  --out-dir "學力輸出"
+```
+
+### 3. 全章節自動化品質檢驗（QA Suite）
+
+`scripts/qa_verify.py` 已同步升級支援全書稽核：
+```bash
+python scripts/qa_verify.py --dir "結案報告輸出"
+```
+會自動核對：
+* [Ch1] 第一章背景 18 縣市聯集與最新新增自然科文案
+* [Ch2] 表 2-1 到考統計人數與總計精確度
+* [Ch3] 表 3-1 評量向度分布題數
+* [Ch4] 試題題數、信度、題目圖檔雜湊與 24pt 行高
+* [Ch5] 圖 5-1 分布圖與表 5-1-x 十區間交叉表
+* [Ch6] 表 6-1 向度矩陣與認知層次交集
+* [Ch7] 附錄完整性
+* [全書] 微軟正黑體字型統一性與專名號底線
 
 ---
 

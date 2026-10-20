@@ -370,6 +370,85 @@ def verify_question_images(docx_path):
     return checks
 
 
+def verify_full_report(docx_path, subject, grade, year="115"):
+    report = {
+        "file": os.path.basename(docx_path),
+        "chapter": "All (1~7)",
+        "subject": subject,
+        "grade": grade,
+        "checks": [],
+        "passed": True
+    }
+    if not os.path.exists(docx_path):
+        report["passed"] = False
+        report["checks"].append(("File Existence", "FAIL", f"File not found: {docx_path}"))
+        return report
+
+    doc = docx.Document(docx_path)
+    full_text = "".join(node.text or "" for node in doc.element.body.iter(qn("w:t")))
+    
+    # 1. Chapter 1 Check
+    if "壹、背景與目的" in full_text:
+        report["checks"].append(("Ch1 Heading", "PASS", "壹、背景與目的存在"))
+        is_annual = ("N" not in str(grade).upper()) and ("新生" not in str(grade))
+        if is_annual:
+            req_sent = "檢測對象為國民中小學三年級至八年級學生，檢測科目包含國語文、數學、英語文和自然。"
+            if req_sent in full_text:
+                report["checks"].append(("Ch1 Natural Science Clause", "PASS", "已包含最新年度型新增自然科文案（檢測科目包含國語文、數學、英語文和自然。）"))
+            else:
+                report["checks"].append(("Ch1 Natural Science Clause", "FAIL", "缺少年度型新增自然科規範文案"))
+        if "國立臺中教育大學測驗統計與適性學習研究中心" in full_text and "等十八縣市共同參與" in full_text:
+            report["checks"].append(("Ch1 Background Counties", "PASS", "18縣市聯集與研究中心名稱正確"))
+    else:
+        report["checks"].append(("Ch1 Heading", "INFO", "未包含第一章（或分章產出）"))
+
+    # 2. Chapter 2 Check
+    if "貳、參與縣市與檢測規模" in full_text:
+        has_t21 = any("表2-1" in (p.text or "") for p in doc.paragraphs) or "表2-1" in full_text
+        if has_t21:
+            report["checks"].append(("Ch2 Table 2-1", "PASS", "表2-1參與人數摘要表存在"))
+        else:
+            report["checks"].append(("Ch2 Table 2-1", "FAIL", "缺少表2-1參與人數摘要表"))
+            
+    # 3. Chapter 3 Check
+    if "參、檢測對象與檢測工具" in full_text:
+        has_t31 = "表3-1" in full_text
+        if has_t31:
+            report["checks"].append(("Ch3 Table 3-1", "PASS", "表3-1評量向度分布題數表存在"))
+        else:
+            report["checks"].append(("Ch3 Table 3-1", "FAIL", "缺少表3-1"))
+
+    # 4. Chapter 5 Check
+    if "伍、整體學力表現分析" in full_text:
+        has_fig51 = "圖5-1" in full_text
+        has_t51 = "表5-1" in full_text
+        if has_fig51 and has_t51:
+            report["checks"].append(("Ch5 Distribution & Tables", "PASS", "圖5-1與表5-1學習重點交叉表存在"))
+        else:
+            report["checks"].append(("Ch5 Distribution & Tables", "FAIL", "第五章圖表不完整"))
+
+    # 5. Chapter 7 Check
+    if "柒、附錄" in full_text:
+        report["checks"].append(("Ch7 Appendix", "PASS", "柒、附錄存在"))
+
+    # 6. Proper names underline check
+    underlines = doc.element.xpath(".//w:u[@w:val='single']")
+    if underlines:
+        report["checks"].append(("Proper Names Underline", "PASS", f"全書包含 {len(underlines)} 處專名號單底線"))
+    else:
+        report["checks"].append(("Proper Names Underline", "WARN", "未偵測到專名號單底線"))
+
+    # 7. Font consistency
+    fonts = {rf.get(qn("w:eastAsia")) for rf in doc.element.xpath(".//w:rFonts") if rf.get(qn("w:eastAsia"))}
+    if fonts and all("微軟正黑體" in str(f) or "JhengHei" in str(f) for f in fonts):
+        report["checks"].append(("Font Consistency", "PASS", "全文字型統一為微軟正黑體"))
+    elif fonts:
+        report["checks"].append(("Font Consistency", "INFO", f"偵測到字型: {fonts}"))
+
+    report["passed"] = not any(c[1] == "FAIL" for c in report["checks"])
+    return report
+
+
 def run_qa_suite(target_dir, analysis_dir=None):
     print(f"=======================================================")
     print(f"執行 SAAA-4-6-chapter 品質檢驗 (QA Audit)")
@@ -442,6 +521,24 @@ def run_qa_suite(target_dir, analysis_dir=None):
         if match_anal and os.path.exists(match_anal):
             rep = verify_chapter_6(p, match_anal, sub, grade)
             reports.append(rep)
+
+    # Audit Full Report files (Chapters 1~7)
+    full_files = [f for f in docx_files if ("結案報告" in f or "成果報告" in f) and "第四章" not in f and "第六章" not in f]
+    for f in full_files:
+        p = os.path.join(target_dir, f)
+        m = re.search(r'([CMES])(\d+N?)', f)
+        if not m:
+            # Try Chinese subject name
+            sub_name_match = re.search(r'(國語文|數學|英語文|自然)', f)
+            sub = {"國語文": "C", "數學": "M", "英語文": "E", "自然": "S"}.get(sub_name_match.group(1), "C") if sub_name_match else "C"
+            grade_match = re.search(r'([三四五六七八]|\d+)年級', f)
+            g_cn_map = {"三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8}
+            grade = g_cn_map.get(grade_match.group(1), grade_match.group(1)) if grade_match else "3"
+        else:
+            sub = m.group(1)
+            grade = m.group(2)
+        rep = verify_full_report(p, sub, grade)
+        reports.append(rep)
 
     # Output Summary Table
     print(f"{'檔案名稱':<30} | {'章節':<4} | {'科目':<4} | {'年級':<4} | {'檢驗結果':<8}")

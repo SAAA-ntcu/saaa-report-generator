@@ -1,20 +1,27 @@
 ---
 name: saaa-4-6-chapter
 description: >-
-  Automates the generation of Chapter 4 (肆、試題分析與教學建議) and Chapter 6 (陸、整體教學建議 / 表6-1 各評量向度通過率)
+  Automates the complete generation of diagnostic assessment reports (Chapters 1 through 7)
   for Taiwanese academic diagnostic assessments (學力檢測 / 新生學力測驗).
   Supports 4 subjects: Chinese (國語文 C), Math (數學 M), English (英語文 E), and Science (自然科學 S)
   across standard elementary/junior high grades (3~8) and special entry cohorts (C7N, M7N, E7N, S7N).
-  Uses deterministic scripts to parse Excel datasets, render docxtpl Word templates, inject XML page breaks,
-  and generate Table 6-1 matrices with automated QA validation. Can crop booklet PDFs,
-  preserve Chinese text frames and shared reading passages, and insert verified images into Chapter 4.
+  Includes Chapter 1 background with the official 18-county union and the new Natural Science curriculum clause,
+  Chapter 2 scale/attendance tables, Chapter 3 assessment frameworks, Chapter 4 booklet screenshot integration
+  with 24pt line height, Chapter 5 performance distributions and live 108 curriculum PDF descriptor extraction,
+  Chapter 6 multi-dimensional pass rate matrices, Chapter 7 appendix attachments, and full document assembly.
 ---
 
-# SAAA-4-6-chapter Skill
+# SAAA Report Engine Skill (Chapters 1~7 & Full Document Assembly)
 
-This skill provides an end-to-end automated workflow for producing official diagnostic assessment report chapters:
-- **Chapter 4 (肆、試題分析與教學建議)**: Complete item analysis tables with discrimination indices, distractor distributions, high/low scoring group pass rates, sub-domain codes, and layout-preserving XML page breaks.
+This skill provides an end-to-end automated workflow for producing official Taiwanese diagnostic assessment reports:
+- **Chapter 1 (壹、背景與目的)**: Standardized background text with official 18-county union, proper name single underlines, and the official updated clause for annual cohorts: `檢測對象為國民中小學三年級至八年級學生，檢測科目包含國語文、數學、英語文和自然。`
+- **Chapter 2 (貳、參與縣市與檢測規模)**: Complete Table 2-1 attendance/scale counts from participation and attendance registers.
+- **Chapter 3 (參、檢測對象與檢測工具)**: Cohort statistics (enrolled, tested, gender ratio, absence rate) and Table 3-1 assessment framework & item distribution.
+- **Chapter 4 (肆、試題分析與教學建議)**: Complete item analysis tables with discrimination indices, distractor distributions, high/low scoring group pass rates, sub-domain codes, booklet PDF screenshots with question-number removal, uniform font-scale planning, and exact 24pt line spacing.
+- **Chapter 5 (伍、整體學力表現分析)**: Figure 5-1 score distribution curves and Tables 5-1-1~N 10-interval pass rate cross-tabulations with live 108 Curriculum PDF descriptor extraction via PyMuPDF.
 - **Chapter 6 (陸、整體教學建議 / 表6-1 各評量向度通過率)**: Structured multi-dimensional pass rate matrices, high/overall/low group breakdowns, cognitive level intersections, diagonal empty cell borders, and customized column widths.
+- **Chapter 7 (柒、附錄)**: Test booklets, answer keys, inquiry announcements, and administrative committee lists.
+- **Master Document Assembler**: Seamlessly stitches any combination of chapters into a finalized Word document with cover page, table of contents (目 錄), unified `微軟正黑體` typography, and proper name marks.
 
 ---
 
@@ -42,122 +49,84 @@ This skill provides an end-to-end automated workflow for producing official diag
 ```text
 SAAA-4-6-chapter/
 ├── SKILL.md                          # Main skill instruction file (this document)
+├── README.md                         # Complete user manual
 ├── scripts/
-│   ├── generate_reports.py          # Unified multi-subject report generator
-│   ├── qa_verify.py                 # Automated verification and auditing tool
-│   └── extract_dimensions.py        # Answer sheet normalizer and Excel inspector
+│   ├── build_full_report.py          # Unified Master CLI entry point (Chapters 1~7 & assembly)
+│   ├── build_from_source.py          # Booklet + Answer + Analysis end-to-end pipeline
+│   ├── generate_reports.py           # Multi-subject generator (Ch 4, Ch 6)
+│   ├── modules/                      # Modular chapter generators
+│   │   ├── ch1_2_admin.py            # Ch 1 & Ch 2 generator (with Natural Science clause)
+│   │   ├── ch3_framework.py          # Ch 3 assessment framework & Table 3-1
+│   │   ├── ch5_performance.py        # Ch 5 distributions & Table 5-1-x 108 curriculum extractor
+│   │   ├── ch7_appendix.py           # Ch 7 appendix injector
+│   │   └── docx_assembler.py         # Full document assembler & OOXML injector
+│   ├── qa_verify.py                  # Full verification covering Ch 1, 2, 3, 4, 5, 6, 7
+│   ├── question_screenshots.py       # Booklet screenshot crop & text removal
+│   ├── report_images.py              # Image layout & passage stitching
+│   ├── image_layout.py               # Uniform font-scale image planner
+│   ├── proper_names.py               # Proper name underline injector (縣市專名號)
+│   └── extract_dimensions.py         # Answer sheet normalizer and Excel inspector
 ├── resources/
-│   └── templates/                   # Standard Word templates for all subjects
-│       ├── pydocxTemplet_C_new.docx # Chinese Chapter 4 template
-│       ├── pydocxTemplet_M.docx     # Math Chapter 4 template
-│       ├── pydocxTemplet_E.docx     # English Chapter 4 template
-│       ├── pydocxTemplet_S.docx     # Science Chapter 4 template
-│       ├── C_demo.docx              # Chinese Chapter 6 Table 6-1 template
-│       ├── S_M_demo.docx            # Math & Science Table 6-1 template
-│       └── six_templet_E.docx       # English Table 6-1 template
+│   └── templates/                    # Standard Word templates for all subjects
 └── references/
-    ├── subject_specifications.md    # Detailed data models and field schemas
-    └── troubleshooting.md           # Word XML page break rules and error recovery
+    ├── full_report_architecture.md   # Pipeline architecture & chapter modularity guide
+    ├── screenshot_integration.md     # Booklet screenshot integration reference
+    ├── subject_specifications.md     # Detailed data models and field schemas
+    ├── word_reference_review.md      # Layout & reference inspection
+    └── troubleshooting.md            # Word XML page break rules and error recovery
 ```
 
 ---
 
 ## Standard Workflow
 
-### Booklet-to-report workflow
-
-When existing Word reports or drafts are supplied, read [word_reference_review.md](./references/word_reference_review.md). Use `inspect_reference_docs.py` to inventory logical questions in merged tables, source images, workbooks, comments and revisions. Matching item codes alone do not establish that general-grade and entrant-cohort questions are the same. Use `verify_editorial.py` to distinguish data/image completion from pending expert content.
-
-When the user supplies subject folders with booklet PDF, horizontal answer Excel and assessment-framework PPTX, read [screenshot_integration.md](./references/screenshot_integration.md) and use `scripts/build_from_source.py`. Supply the actual analysis directory; do not treat an answer sheet, historical item difficulty or a missing workbook as student results. Drafts with missing statistics require explicit `--draft` and visible pending fields.
-
-For 桃園市七年級新生 validation, use the three subject folders and their matching C7N/M7N/E7N analysis files. The integrated entry point defaults to `_AI產出` filenames. It inserts every question by actual number, includes shared articles before their first related question, and records source/PNG hashes. Run both data/image QA and rendered-page inspection before delivery.
-
-Keep question text at a consistent reading size: use the shared source scale from `image_layout.py`, never stretch every trimmed image to fill the cell. Verify actual embedded dimensions as well as image hashes; the layout audit records the source font estimate and effective reading size.
-For English, target 13pt effective booklet text; retain the 11pt target for other subjects. Shared passages use their own proportional page-fit scale. Use `build_from_source.py --subject E` to revise English alone after another subject's layout has been accepted.
-
-Remove the leading question number from each booklet image without removing question text, options, diagrams or shared articles. From 「一、試題分析」 onward, use exactly 24pt line spacing. Avoid paragraph keep flags that produce black square formatting marks in Word; use explicit page breaks outside item tables.
-
-The standard normalized-Excel workflow below remains available. Add `--booklet-pdf` or `--images-manifest` to its single-subject command to fill the question-image row.
-
-### Step 1: Input Discovery and Validation
-Identify the input files:
-1. **Answers & Dimensions Excel**:
-   - Standard format: `115_<Subject>_ans.xlsx` (contains sheets `答案` and `向度` or `評量指標代`).
-   - Single-cohort format: `<Cohort>_ans.xlsx` (e.g., `C7N_ans.xlsx`, `M7N_ans.xlsx`, `E7N_ans.xlsx`).
-2. **Item Analysis Excel**:
-   - Standard format: `115_<Subject>_試題分析總表.xlsx` (sheets named by grade `3`, `4`, `5`, etc.).
-   - Single-cohort format: `<Cohort>_試題分析總表.xlsx`.
-3. **Raw Unrounded Statistics (High-Precision Mode)**:
-   - Format: `<Cohort>_分析結果.xlsx` (contains unrounded 4-decimal floating rates for high/low/overall groups).
-   - If present alongside the summary table, the engine automatically prioritizes these raw floating numbers when computing Chapter 6 domain averages to avoid secondary round-off error propagation.
-
-> [!TIP]
-> If dealing with raw unstructured Excel tables or PPTX slides (e.g. horizontal answer sheets), use `scripts/extract_dimensions.py` to inspect and convert them into the standard 2-sheet format.
-
-### Step 2: Generate Reports
-Run the unified generator script:
-
+### Mode 1: Full Report Assembly (Chapters 1~7)
+Run the master CLI to generate all chapters or assemble them into the final report:
 ```bash
-# Generate both Chapter 4 and Chapter 6 for a specific cohort:
-python scripts/generate_reports.py \
-  --ans-file "<path_to_ans.xlsx>" \
-  --analysis-file "<path_to_analysis.xlsx>" \
-  --subject <C|M|E|S> \
-  --grade <grade_or_cohort> \
+# Assemble complete report for Math Grade 4:
+python scripts/build_full_report.py \
+  --subject M \
+  --grade 4 \
   --year 115 \
-  --chapter both \
-  --out-dir "<output_directory>"
-
-# Examples:
-# Chinese 7N:
-python scripts/generate_reports.py --ans-file C7N_ans.xlsx --analysis-file C7N_試題分析總表.xlsx --subject C --grade 7N --out-dir .
-
-# Math 7N:
-python scripts/generate_reports.py --ans-file M7N_ans.xlsx --analysis-file M7N_試題分析總表.xlsx --subject M --grade 7N --out-dir .
-
-# English 7N:
-python scripts/generate_reports.py --ans-file E7N_ans.xlsx --analysis-file E7N_試題分析總表.xlsx --subject E --grade 7N --out-dir .
-
-# Batch auto-scan all subjects in a directory:
-python scripts/generate_reports.py --auto-scan "<directory_path>" --out-dir "<output_directory>"
+  --chapters all \
+  --out-dir output/
 ```
 
-### Step 3: Run Automated QA Verification
-Verify the generated Word documents against the input data:
-
+### Mode 2: Modular Chapter Generation
+Generate specific chapters according to project milestones:
 ```bash
-python scripts/qa_verify.py --dir "<output_directory>" --analysis-dir "<analysis_files_directory>"
+# Generate Chapters 1 & 2 (Administration & Attendance):
+python scripts/build_full_report.py --subject C --grade 3 --chapters 1,2 --out-dir output/
+
+# Generate Chapters 4 & 6 (Expert review draft with booklet screenshots):
+python scripts/build_full_report.py --subject E --grade 7N --chapters 4,6 --booklet-pdf booklet.pdf --out-dir output/
+
+# Generate Chapter 5 (Ability distribution & Table 5-1-x with 108 Curriculum PDF extraction):
+python scripts/build_full_report.py --subject S --grade 5 --chapters 5 --curriculum-pdf "自然科學領域.pdf" --out-dir output/
 ```
-The QA suite automatically validates:
-- Question table count matches analysis items.
-- Cronbach's alpha and sample size match analysis metadata.
-- Overall pass rate percentage in Chapter 6 text matches calculated student average.
-- Table 6-1 row/column structure satisfies subject criteria.
-- Explicit page breaks exist between question tables.
-- Standard font `微軟正黑體` is applied to all text runs.
-- With `.images.json`, every question image matches the recorded PNG hash and every shared article part appears exactly once.
-- Chapter 4 analysis paragraphs have exactly 24pt line spacing; no paragraph keep flags remain that cause black square formatting marks. Newly cropped images record removal of the leading question number.
 
-QA is structural/data evidence, not proof of page layout. Render and inspect the final reports; preserve the source Word templates. On Windows without LibreOffice, `scripts/render_word.ps1` can export read-only QA PDFs through a hidden independent Microsoft Word instance.
-
-After rendering, run `python scripts/verify_pagination.py --dir "<output_directory>" --pdf-dir "<rendered_pdf_directory>" --json "<output_directory>/分頁檢驗_AI產出.json"`. Every question's selection-rate table and analysis opening must occur on the same PDF page; long analyses may continue naturally on the next page. Keep the subject-wide question image scale unchanged when repairing pagination. Combine all parts of each Chinese/English shared passage into one complete image and fit it proportionally on one page with its heading; use a separate page-fit scale for passages. Keep ordinary question images left/top aligned. Chinese and English shared passages must fit completely on one page and be vertically centered in the page article area below the heading, with horizontal alignment left. Range-only listening headers remain inside the first item. Retain all image scales and aspect ratios. Measure reference Word layouts with `scripts/measure_reference_layout.py`; see `references/word_reference_review.md` for interpretation limits.
-
----
-
-County/city names in report text (for example 桃園市) use a proper-name mark: a single underline applied only to the name. Preserve all wording and other formatting; apply `scripts/proper_names.py` after final document assembly.
-
-## Detailed Subject Rules
-
-Screenshots supplied as layout references control spacing, image placement and table geometry only. Preserve the existing Chinese introduction text, grade wording, answer/option labels, assessment-target text and knowledge-dimension fields. For the reference layout, put each category introduction together with its first item table and use matching list indentation for both categories. This moves page boundaries without rewriting content.
-
-Refer to [subject_specifications.md](./references/subject_specifications.md) for full details:
-- **Chinese (`C`)**: Groups questions by domain code (`A`~`J`). Subheadings `(一)形音知識` stay together with their first question table (`prev_was_heading` logic). Chapter 6 Table 6-1 has 5 columns and 13 rows.
-- **Math (`M`)**: Continuous questions Q1~QN. Chapter 6 Table 6-1 has 13 columns with 3 rows per domain (高, 全, 低) and empty intersection diagonal borders (`w:tl2br`).
-- **English (`E`)**: Continuous questions Q1~QN. Chapter 6 Table 6-1 has 6 columns with vertical merges for `聽力` and `閱讀`.
-- **Science (`S`)**: Continuous questions Q1~QN. Supports unscored items (`不予計分`). Chapter 6 Table 6-1 has 16 columns (4 cognitive domains + overall).
+### Mode 3: Automated QA Verification
+Verify generated Word documents against data standards:
+```bash
+python scripts/qa_verify.py --dir output/
+```
+The QA suite verifies:
+- Chapter 1: 18-county union, proper name single underlines, and the exact clause: `檢測對象為國民中小學三年級至八年級學生，檢測科目包含國語文、數學、英語文和自然。`
+- Chapter 2: Table 2-1 attendance matrix, column sums, and attendance rates.
+- Chapter 3: Student statistics and Table 3-1 question distributions.
+- Chapter 4: Question tables, item codes, images SHA256, 24pt line height, no black squares.
+- Chapter 5: Figure 5-1 caption, Table 5-1-x 10-interval pass rate tables, and curriculum descriptions.
+- Chapter 6: Table 6-1 multi-dimensional pass rates and cognitive intersections.
+- Chapter 7: Appendix structure.
+- Full Doc: Standard font `微軟正黑體` applied uniformly, no orphaned bookmarks.
 
 ---
 
-## Troubleshooting
+## Detailed Guidelines & Subject Rules
 
-For common issues regarding Word XML page breaks, table row heights, or encoding errors, consult the [troubleshooting guide](./references/troubleshooting.md).
+Refer to the reference documentation for specialized topics:
+- [full_report_architecture.md](./references/full_report_architecture.md): Overall pipeline architecture and chapter modularity.
+- [screenshot_integration.md](./references/screenshot_integration.md): Booklet PDF cropping, question-number removal, passage stitching.
+- [subject_specifications.md](./references/subject_specifications.md): Data schemas and field specifications for all subjects.
+- [word_reference_review.md](./references/word_reference_review.md): Reference document inspection and review standards.
+- [troubleshooting.md](./references/troubleshooting.md): Recovery steps for OOXML page breaks, tables, and encoding.

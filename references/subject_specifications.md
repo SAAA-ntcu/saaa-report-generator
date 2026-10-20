@@ -151,3 +151,40 @@ The automated engine strictly preserves placeholders for domain experts:
 - **Chapter 4 Row 9 (單題質性分析與教學建議)**: Left for experts.
 - **Chapter 6 Post-Table 6-1 In-Depth Pedagogical Suggestions**: Written by experts.
 - **English Table 6-1 Placement**: Adjusted manually after qualitative content is written.
+
+---
+
+## 5. Specifications for Chapters 1, 2, 3, 5, 7 (Full Report Suite)
+
+### 5.1 Chapter 1 (壹、背景與目的)
+- **Background Counties**: Unified 18-county union across all participation rows (基隆市至金門縣，排除臺北市、彰化縣、宜蘭縣、連江縣).
+- **Proper Names Underline**: Center name (`國立臺中教育大學測驗統計與適性學習研究中心`) and each of the 18 counties carry a single underline (`w:u val="single"`).
+- **Annual Cohort Natural Science Addition**:
+  The concluding sentence of Paragraph 2 for annual cohorts (Grades 3~8) strictly follows:
+  `檢測對象為國民中小學三年級至八年級學生，檢測科目包含國語文、數學、英語文和自然。`
+
+### 5.2 Chapter 2 (貳、參與縣市與檢測規模)
+- **Table 2-1 Title**: `表2-1　{year}年度{stage}學生學習能力檢測{subject}{grade_cn}年級縣市參與人數摘要表`
+- **Columns (5)**: `縣市別`, `報考學生人數`, `到考人數`, `缺考人數`, `到考率(%)`.
+- **Data Source**: Counties marked with `V` in `115年縣市學力檢測參與狀況_1150108.xlsx` and numbers from `到考人數.xlsx`.
+- **Summary Row**: `總計` with column totals and weighted overall attendance rate (2 decimal places).
+
+### 5.3 Chapter 3 (參、檢測對象與檢測工具)
+- **Cohort Statistics**: Displays enrolled count (`應考名冊羅列{N}人`), tested count (`實際施測人數{N}人`), male/female counts, and absence rate.
+- **Table 3-1 Structure**: `表3-1　{subject}{grade_cn}年級評量向度之分布題數`
+  - Columns (4): `主要評量向度`, `評量次向度`, `測驗題號`, `題數`.
+  - Content domains group sub-dimensions and list test item numbers, ending with a merged `總計` row.
+
+### 5.4 Chapter 5 (伍、整體學力表現分析)
+- **Section 1**: Background variable ability distribution analysis with `圖5-1` histogram/curve.
+- **Section 2**: Student performance across learning focuses:
+  - Tables 5-1-1 through 5-1-N: 10 pass-rate intervals (`91~100`, `81~90`, `71~80`, `61~70`, `51~60`, `41~50`, `31~40`, `21~30`, `11~20`, `0~10`).
+  - Columns: `答對率%`, `題號`, `學習重點` (Curriculum code + official descriptor extracted from 108 Curriculum PDF).
+  - Alternating row background shading `#DDEBF7`.
+
+### 5.5 Chapter 7 (柒、附錄)
+- Section Title: `柒、附錄`
+- Contains:
+  - `附錄一` Test booklets & answer keys
+  - `附錄二` Item inquiry notices and responses
+  - Committee lists & administrative appendices.
