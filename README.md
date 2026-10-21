@@ -1,5 +1,5 @@
-# 國中小學力檢測 第四章與第六章報告自動化生成系統 (SAAA-4-6-chapter)
-## 操作手冊與技術使用指南 (User Operation Manual)
+# 國中小學力檢測 成果報告全篇自動化生成系統 (saaa-report-generator)
+## 支援第一章至第七章完整產出與總裝 · 操作手冊與技術指南 (User Operation Manual)
 
 ## 題本截圖與報告整合
 
@@ -52,8 +52,8 @@ python scripts/qa_verify.py --dir "驗證輸出" --analysis-dir "C:/Users/adminn
 
 ```bash
 # 1. 複製專案儲存庫
-git clone https://github.com/SAAA-ntcu/SAAA-4-6-chapter.git
-cd SAAA-4-6-chapter
+git clone https://github.com/SAAA-ntcu/saaa-report-generator.git
+cd saaa-report-generator
 
 # 2. 安裝 Python 核心相依套件
 pip install -r requirements.txt
@@ -278,9 +278,9 @@ python scripts/qa_verify.py --dir "./output" --analysis-dir "./data"
 * **解法**：本系統在底層 XML 同時注入了 `w:eastAsia`、`w:ascii` 與 `w:hAnsi` 三種微軟正黑體標籤。請確保開啟文件的電腦端已安裝「微軟正黑體」（Windows 內建標配）。
 
 ### Q4: 如何讓 AI Agent（如 Claude / ChatGPT / Antigravity）直接使用本系統？
-* **Antigravity / Gemini CLI**：直接將資料夾置於 `.agents/skills/SAAA-4-6-chapter` 即可自動辨識。
+* **Antigravity / Gemini CLI**：直接將資料夾置於 `.agents/skills/saaa-report-generator`（或全域 `skills/saaa-report-generator`）即可自動辨識。
 * **Cursor / Claude Desktop**：在專案提示詞中輸入：
-  > 「請遵照 `SAAA-4-6-chapter/SKILL.md` 之操作規範，依本手冊流程產出第 4 章與第 6 章評量報告。」
+  > 「請遵照 `saaa-report-generator/SKILL.md` 之操作規範，依本手冊流程產出第 1 章至第 7 章完整評量報告。」
 
 ---
 

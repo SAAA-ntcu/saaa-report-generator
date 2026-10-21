@@ -1,5 +1,5 @@
 ---
-name: saaa-4-6-chapter
+name: saaa-report-generator
 description: >-
   Automates the complete generation of diagnostic assessment reports (Chapters 1 through 7)
   for Taiwanese academic diagnostic assessments (學力檢測 / 新生學力測驗).
@@ -20,7 +20,7 @@ This skill provides an end-to-end automated workflow for producing official Taiw
 - **Chapter 4 (肆、試題分析與教學建議)**: Complete item analysis tables with discrimination indices, distractor distributions, high/low scoring group pass rates, sub-domain codes, booklet PDF screenshots with question-number removal, uniform font-scale planning, and exact 24pt line spacing.
 - **Chapter 5 (伍、整體學力表現分析)**: Figure 5-1 score distribution curves and Tables 5-1-1~N 10-interval pass rate cross-tabulations with live 108 Curriculum PDF descriptor extraction via PyMuPDF.
 - **Chapter 6 (陸、整體教學建議 / 表6-1 各評量向度通過率)**: Structured multi-dimensional pass rate matrices, high/overall/low group breakdowns, cognitive level intersections, diagonal empty cell borders, and customized column widths.
-- **Chapter 7 (柒、附錄)**: Test booklets, answer keys, inquiry announcements, and administrative committee lists.
+- **Chapter 7 (柒、附錄)**: Automated booklet PDF page rendering (181.4068 DPI / 1500px width), official `DDEBF7` shaded heading with 24pt exact line height, seamless full-page picture injection (489.0pt × 691.8pt) with exact page breaks (`w:pageBreakBefore`), answer keys, inquiry announcements, and standalone/bundled appendix document generation.
 - **Master Document Assembler**: Seamlessly stitches any combination of chapters into a finalized Word document with cover page, table of contents (目 錄), unified `微軟正黑體` typography, and proper name marks.
 
 ---

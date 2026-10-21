@@ -40,7 +40,10 @@ from modules.ch5_performance import (
     build_chapter_5,
     extract_curriculum_descriptions,
 )
-from modules.ch7_appendix import build_chapter_7
+from modules.ch7_appendix import (
+    build_chapter_7,
+    create_standalone_chapter_7_docx,
+)
 from modules.docx_assembler import FullReportAssembler
 from generate_reports import (
     generate_chapter_4,
@@ -125,6 +128,18 @@ def build_full_report(
     is_annual = "N" not in grade_str.upper() and "新生" not in grade_str
     has_natural = is_annual  # 年度型 115 年度新增自然科
     
+    # If only Chapter 7 requested, generate official standalone Chapter 7 document directly
+    if chapters == {7}:
+        g_cn = chinese_numeral(grade_num)
+        filename = f"{year}年度成果報告_{sub_name}{g_cn}年級_第七章附錄{output_suffix}.docx"
+        final_path = out_dir / filename
+        pdf_target = booklet_pdf if booklet_pdf and Path(booklet_pdf).exists() else (
+            next(Path(appendix_dir).glob("*.pdf"), None) if appendix_dir and Path(appendix_dir).exists() else None
+        )
+        if pdf_target:
+            create_standalone_chapter_7_docx(pdf_target, final_path)
+            return final_path
+
     # Initialize Assembler
     assembler = FullReportAssembler(
         subject=sub_name,
@@ -235,6 +250,7 @@ def build_full_report(
             subject=sub_name,
             grade=grade_num,
             appendix_files=app_files,
+            booklet_pdf=booklet_pdf,
             year=year,
         )
         assembler.append_chapter_elements(ch7_elems, add_page_break=True)

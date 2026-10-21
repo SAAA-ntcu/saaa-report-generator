@@ -47,10 +47,19 @@ def clean_orphaned_bookmarks(document: Document) -> None:
             p.remove(b)
 
 
+def append_to_body_before_sectpr(doc: Document, elem: Any) -> None:
+    """Appends an element to body while ensuring body.sectPr remains the final child."""
+    body = doc.element.body
+    sectPr = body.sectPr
+    if sectPr is not None:
+        body.insert(body.index(sectPr), elem)
+    else:
+        body.append(elem)
+
+
 def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Document:
     """Builds a fresh standard SAAA report skeleton document from scratch."""
     doc = Document()
-    body = doc.element.body
     g_cn = chinese_numeral(grade)
     stage = "國民小學" if grade <= 6 else "國民中學"
     sub_full = "自然科學領域" if subject == "自然" else f"{subject}領域" if "領域" not in subject else subject
@@ -60,31 +69,31 @@ def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Documen
     p_cov1_jc = OxmlElement("w:jc")
     p_cov1_jc.set(qn("w:val"), "center")
     p_cov1.find(qn("w:pPr")).append(p_cov1_jc)
-    body.append(p_cov1)
+    append_to_body_before_sectpr(doc, p_cov1)
 
     p_cov2 = create_paragraph(f"{subject}{g_cn}年級結案報告", font_size_pt=28.0, bold=True, space_after_pt=180.0)
     p_cov2_jc = OxmlElement("w:jc")
     p_cov2_jc.set(qn("w:val"), "center")
     p_cov2.find(qn("w:pPr")).append(p_cov2_jc)
-    body.append(p_cov2)
+    append_to_body_before_sectpr(doc, p_cov2)
 
     p_unit1 = create_paragraph("國立臺中教育大學", font_size_pt=16.0, bold=True, space_after_pt=6.0)
     p_unit1_jc = OxmlElement("w:jc")
     p_unit1_jc.set(qn("w:val"), "center")
     p_unit1.find(qn("w:pPr")).append(p_unit1_jc)
-    body.append(p_unit1)
+    append_to_body_before_sectpr(doc, p_unit1)
 
     p_unit2 = create_paragraph("測驗統計與適性學習研究中心", font_size_pt=16.0, bold=True, space_after_pt=12.0)
     p_unit2_jc = OxmlElement("w:jc")
     p_unit2_jc.set(qn("w:val"), "center")
     p_unit2.find(qn("w:pPr")).append(p_unit2_jc)
-    body.append(p_unit2)
+    append_to_body_before_sectpr(doc, p_unit2)
 
     p_date = create_paragraph(f"中華民國 {year} 年12月", font_size_pt=14.0, bold=True, space_after_pt=24.0)
     p_date_jc = OxmlElement("w:jc")
     p_date_jc.set(qn("w:val"), "center")
     p_date.find(qn("w:pPr")).append(p_date_jc)
-    body.append(p_date)
+    append_to_body_before_sectpr(doc, p_date)
 
     # Section break after cover
     p_break = parse_xml(
@@ -92,14 +101,14 @@ def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Documen
         '<w:pPr><w:sectPr><w:type w:val="nextPage"/></w:sectPr></w:pPr>'
         '</w:p>'
     )
-    body.append(p_break)
+    append_to_body_before_sectpr(doc, p_break)
 
     # --- Table of Contents (TOC) ---
     p_toc_title = create_paragraph("目　錄", font_size_pt=18.0, bold=True, space_after_pt=18.0)
     p_toc_title_jc = OxmlElement("w:jc")
     p_toc_title_jc.set(qn("w:val"), "center")
     p_toc_title.find(qn("w:pPr")).append(p_toc_title_jc)
-    body.append(p_toc_title)
+    append_to_body_before_sectpr(doc, p_toc_title)
 
     toc_items = [
         "壹、背景與目的",
@@ -115,7 +124,7 @@ def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Documen
         ind = OxmlElement("w:ind")
         ind.set(qn("w:left"), "720")
         p_t.find(qn("w:pPr")).append(ind)
-        body.append(p_t)
+        append_to_body_before_sectpr(doc, p_t)
 
     # Section break after TOC
     p_break2 = parse_xml(
@@ -123,7 +132,7 @@ def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Documen
         '<w:pPr><w:sectPr><w:type w:val="nextPage"/></w:sectPr></w:pPr>'
         '</w:p>'
     )
-    body.append(p_break2)
+    append_to_body_before_sectpr(doc, p_break2)
 
     return doc
 
