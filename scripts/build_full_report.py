@@ -54,6 +54,57 @@ from generate_reports import (
 from source_inputs import missing_statistics
 
 
+def generate_special_ch1_2_3(
+    template_path: str | Path,
+    output_path: str | Path,
+    year: str = "115",
+    month: str = "9",
+    day: str = "25",
+    enrolled_count: str = "23,273",
+    tested_count: str = "22,191",
+    boy_count: str = "11,500",
+    girl_count: str = "10,691",
+    absence_rate: str = "4.6",
+    framework_rows: list[dict[str, str]] | None = None,
+    total_items: str = "35",
+) -> Path:
+    """Renders Special Cohort (e.g. 7N) Chapter 1~3 standardized template via DocxTemplate."""
+    from docxtpl import DocxTemplate
+
+    tpl = DocxTemplate(str(template_path))
+    if framework_rows is None:
+        framework_rows = [
+            {"domain": "聽力", "sub_domain": "辨識句意", "item_numbers": "1、2、3"},
+            {"domain": "聽力", "sub_domain": "基本問答", "item_numbers": "4、5、6、7、8"},
+            {"domain": "聽力", "sub_domain": "言談理解", "item_numbers": "9、10、11、12、13、14、15"},
+            {"domain": "閱讀", "sub_domain": "單題", "item_numbers": "16、17、...、27"},
+            {"domain": "閱讀", "sub_domain": "題組", "item_numbers": "28、29、...、35"},
+        ]
+    context = {
+        "year": str(year),
+        "month": str(month),
+        "day": str(day),
+        "當年度參與縣市": "桃園市",
+        "國字大寫": "一",
+        "enrolled_count": str(enrolled_count),
+        "tested_count": str(tested_count),
+        "boy_count": str(boy_count),
+        "girl_count": str(girl_count),
+        "absence_rate": str(absence_rate),
+        "listening_dimensions": "辨識句意、基本問答",
+        "listening_dimensions_final": "言談理解",
+        "reading_dimensions": "單題",
+        "reading_dimensions_final": "題組",
+        "framework_rows": framework_rows,
+        "total_items": str(total_items),
+    }
+    tpl.render(context)
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    tpl.save(str(out_p))
+    return out_p
+
+
 SUBJECT_NAME_MAP = {
     "C": "國語文", "國語": "國語文", "國語文": "國語文",
     "M": "數學", "數學": "數學",
@@ -148,35 +199,48 @@ def build_full_report(
         base_template_path=base_template,
     )
     
-    # --- Chapter 1 ---
-    if 1 in chapters:
-        ch1_elems = build_chapter_1(
-            year=year,
-            background_counties=DEFAULT_18_BACKGROUND_COUNTIES,
-            with_underline=True,
-            has_natural_science=has_natural,
-        )
-        assembler.append_chapter_elements(ch1_elems, add_page_break=True)
-        
-    # --- Chapter 2 ---
-    if 2 in chapters:
-        ch2_elems = build_chapter_2(
-            subject=sub_name,
-            grade=grade_num,
-            attendance_data=attendance_data,
-            year=year,
-        )
-        assembler.append_chapter_elements(ch2_elems, add_page_break=True)
-        
-    # --- Chapter 3 ---
-    if 3 in chapters:
-        ch3_elems = build_chapter_3(
-            subject=sub_name,
-            grade=grade_num,
-            attendance_data=attendance_data,
-            year=year,
-        )
-        assembler.append_chapter_elements(ch3_elems, add_page_break=True)
+    # --- Chapter 1, 2, 3 Handling ---
+    # Check if a special cohort template exists for Ch 1~3 (e.g. E7N_ch1_2_3_template.docx)
+    special_ch123_tpl = templates_dir / "special_cohorts" / f"{cohort}_ch1_2_3_template.docx"
+    if not special_ch123_tpl.exists() and "7N" in cohort:
+        special_ch123_tpl = templates_dir / "special_cohorts" / f"{sub_code}7N_ch1_2_3_template.docx"
+
+    use_special_ch123 = special_ch123_tpl.exists() and any(c in chapters for c in (1, 2, 3))
+
+    if use_special_ch123:
+        c123_path = out_dir / f"第1_2_3章_{cohort}{output_suffix}.docx"
+        generate_special_ch1_2_3(special_ch123_tpl, c123_path, year=year)
+        assembler.import_external_chapter_docx(c123_path, add_page_break=True)
+    else:
+        # --- Chapter 1 ---
+        if 1 in chapters:
+            ch1_elems = build_chapter_1(
+                year=year,
+                background_counties=DEFAULT_18_BACKGROUND_COUNTIES,
+                with_underline=True,
+                has_natural_science=has_natural,
+            )
+            assembler.append_chapter_elements(ch1_elems, add_page_break=True)
+            
+        # --- Chapter 2 ---
+        if 2 in chapters:
+            ch2_elems = build_chapter_2(
+                subject=sub_name,
+                grade=grade_num,
+                attendance_data=attendance_data,
+                year=year,
+            )
+            assembler.append_chapter_elements(ch2_elems, add_page_break=True)
+            
+        # --- Chapter 3 ---
+        if 3 in chapters:
+            ch3_elems = build_chapter_3(
+                subject=sub_name,
+                grade=grade_num,
+                attendance_data=attendance_data,
+                year=year,
+            )
+            assembler.append_chapter_elements(ch3_elems, add_page_break=True)
         
     # --- Chapter 4 ---
     if 4 in chapters:
