@@ -21,6 +21,15 @@ class TestAssembler(unittest.TestCase):
         self.assertIn("國立臺中教育大學", text)
         self.assertIn("目　錄", text)
 
+    def test_7n_cover_skeleton(self):
+        doc = build_blank_skeleton("英語文", "7N", year="115", is_7n=True)
+        text = "".join(doc.element.body.itertext())
+        self.assertIn("115", text)
+        self.assertIn("桃園市學生學習能力檢測", text)
+        self.assertIn("英語文七年級新生施測結果報告", text)
+        self.assertIn("國立臺中教育大學", text)
+        self.assertIn("目　錄", text)
+
     def test_full_assembly_workflow(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             out_path = Path(tmpdir) / "test_report.docx"

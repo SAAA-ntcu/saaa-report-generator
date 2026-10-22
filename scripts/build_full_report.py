@@ -200,11 +200,13 @@ def build_full_report(
             return final_path
 
     # Initialize Assembler
+    is_7n_cohort = "7N" in grade_str.upper() or "新生" in grade_str
     assembler = FullReportAssembler(
         subject=sub_name,
-        grade=grade_num,
+        grade=grade_str,
         year=year,
         base_template_path=base_template,
+        is_7n=is_7n_cohort,
     )
     
     # --- Chapter 1, 2, 3 Handling ---
@@ -329,7 +331,10 @@ def build_full_report(
         
     # Save final report
     g_cn = chinese_numeral(grade_num)
-    filename = f"{year}年度縣市學生學習能力檢測結案報告_{sub_name}{g_cn}年級{output_suffix}.docx"
+    if is_7n_cohort:
+        filename = f"{year}年度桃園市學生學習能力檢測結案報告_{sub_name}七年級新生{output_suffix}.docx"
+    else:
+        filename = f"{year}年度縣市學生學習能力檢測結案報告_{sub_name}{g_cn}年級{output_suffix}.docx"
     final_path = out_dir / filename
     assembler.finalize(final_path)
     return final_path

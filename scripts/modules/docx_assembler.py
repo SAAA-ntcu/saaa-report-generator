@@ -57,43 +57,68 @@ def append_to_body_before_sectpr(doc: Document, elem: Any) -> None:
         body.append(elem)
 
 
-def build_blank_skeleton(subject: str, grade: int, year: str = "115") -> Document:
+def build_blank_skeleton(subject: str, grade: int | str, year: str = "115", is_7n: bool = False) -> Document:
     """Builds a fresh standard SAAA report skeleton document from scratch."""
-    doc = Document()
-    g_cn = chinese_numeral(grade)
-    stage = "國民小學" if grade <= 6 else "國民中學"
-    sub_full = "自然科學領域" if subject == "自然" else f"{subject}領域" if "領域" not in subject else subject
+    special_templates_dir = Path(__file__).resolve().parents[2] / "resources" / "templates" / "special_cohorts"
+    cov_tpl = special_templates_dir / "7N_cover_template.docx"
 
-    # --- Cover Page ---
-    p_cov1 = create_paragraph(f"{year}年度縣市學生學習能力檢測", font_size_pt=26.0, bold=True, space_after_pt=18.0)
-    p_cov1_jc = OxmlElement("w:jc")
-    p_cov1_jc.set(qn("w:val"), "center")
-    p_cov1.find(qn("w:pPr")).append(p_cov1_jc)
-    append_to_body_before_sectpr(doc, p_cov1)
+    if is_7n and cov_tpl.exists():
+        import tempfile
+        from docxtpl import DocxTemplate
 
-    p_cov2 = create_paragraph(f"{subject}{g_cn}年級結案報告", font_size_pt=28.0, bold=True, space_after_pt=180.0)
-    p_cov2_jc = OxmlElement("w:jc")
-    p_cov2_jc.set(qn("w:val"), "center")
-    p_cov2.find(qn("w:pPr")).append(p_cov2_jc)
-    append_to_body_before_sectpr(doc, p_cov2)
+        tpl = DocxTemplate(str(cov_tpl))
+        tpl.render({"YEAR": str(year), "year": str(year), "SUBJECT": str(subject), "subject": str(subject)})
+        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        tpl.save(str(tmp_path))
+        cov_doc = Document(str(tmp_path))
+        doc = Document()
+        doc.sections[0].top_margin = cov_doc.sections[0].top_margin
+        doc.sections[0].bottom_margin = cov_doc.sections[0].bottom_margin
+        doc.sections[0].left_margin = cov_doc.sections[0].left_margin
+        doc.sections[0].right_margin = cov_doc.sections[0].right_margin
+        for elem in cov_doc.element.body.iterchildren():
+            if elem.tag in (qn("w:p"), qn("w:tbl")):
+                append_to_body_before_sectpr(doc, deepcopy(elem))
+        try:
+            tmp_path.unlink()
+        except Exception:
+            pass
+    else:
+        doc = Document()
+        grade_clean = int(re.sub(r"\D", "", str(grade)) or 7)
+        g_cn = chinese_numeral(grade_clean)
 
-    p_unit1 = create_paragraph("國立臺中教育大學", font_size_pt=16.0, bold=True, space_after_pt=6.0)
-    p_unit1_jc = OxmlElement("w:jc")
-    p_unit1_jc.set(qn("w:val"), "center")
-    p_unit1.find(qn("w:pPr")).append(p_unit1_jc)
-    append_to_body_before_sectpr(doc, p_unit1)
+        # --- Standard Cover Page ---
+        p_cov1 = create_paragraph(f"{year}年度縣市學生學習能力檢測", font_size_pt=26.0, bold=True, space_after_pt=18.0)
+        p_cov1_jc = OxmlElement("w:jc")
+        p_cov1_jc.set(qn("w:val"), "center")
+        p_cov1.find(qn("w:pPr")).append(p_cov1_jc)
+        append_to_body_before_sectpr(doc, p_cov1)
 
-    p_unit2 = create_paragraph("測驗統計與適性學習研究中心", font_size_pt=16.0, bold=True, space_after_pt=12.0)
-    p_unit2_jc = OxmlElement("w:jc")
-    p_unit2_jc.set(qn("w:val"), "center")
-    p_unit2.find(qn("w:pPr")).append(p_unit2_jc)
-    append_to_body_before_sectpr(doc, p_unit2)
+        p_cov2 = create_paragraph(f"{subject}{g_cn}年級結案報告", font_size_pt=28.0, bold=True, space_after_pt=180.0)
+        p_cov2_jc = OxmlElement("w:jc")
+        p_cov2_jc.set(qn("w:val"), "center")
+        p_cov2.find(qn("w:pPr")).append(p_cov2_jc)
+        append_to_body_before_sectpr(doc, p_cov2)
 
-    p_date = create_paragraph(f"中華民國 {year} 年12月", font_size_pt=14.0, bold=True, space_after_pt=24.0)
-    p_date_jc = OxmlElement("w:jc")
-    p_date_jc.set(qn("w:val"), "center")
-    p_date.find(qn("w:pPr")).append(p_date_jc)
-    append_to_body_before_sectpr(doc, p_date)
+        p_unit1 = create_paragraph("國立臺中教育大學", font_size_pt=16.0, bold=True, space_after_pt=6.0)
+        p_unit1_jc = OxmlElement("w:jc")
+        p_unit1_jc.set(qn("w:val"), "center")
+        p_unit1.find(qn("w:pPr")).append(p_unit1_jc)
+        append_to_body_before_sectpr(doc, p_unit1)
+
+        p_unit2 = create_paragraph("測驗統計與適性學習研究中心", font_size_pt=16.0, bold=True, space_after_pt=12.0)
+        p_unit2_jc = OxmlElement("w:jc")
+        p_unit2_jc.set(qn("w:val"), "center")
+        p_unit2.find(qn("w:pPr")).append(p_unit2_jc)
+        append_to_body_before_sectpr(doc, p_unit2)
+
+        p_date = create_paragraph(f"中華民國 {year} 年12月", font_size_pt=14.0, bold=True, space_after_pt=24.0)
+        p_date_jc = OxmlElement("w:jc")
+        p_date_jc.set(qn("w:val"), "center")
+        p_date.find(qn("w:pPr")).append(p_date_jc)
+        append_to_body_before_sectpr(doc, p_date)
 
     # Section break after cover
     p_break = parse_xml(
