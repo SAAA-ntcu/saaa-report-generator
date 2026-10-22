@@ -1,4 +1,4 @@
-"""Unit tests for Special Cohort 7N Chapter 1~3 Template."""
+"""Unit tests for Special Cohort 7N (E7N & C7N) Chapter 1~3 Templates."""
 import unittest
 import sys
 from pathlib import Path
@@ -7,23 +7,33 @@ import docx
 from docx.shared import Pt
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TPL_PATH = REPO_ROOT / "resources" / "templates" / "special_cohorts" / "E7N_ch1_2_3_template.docx"
+E7N_TPL_PATH = REPO_ROOT / "resources" / "templates" / "special_cohorts" / "E7N_ch1_2_3_template.docx"
+C7N_TPL_PATH = REPO_ROOT / "resources" / "templates" / "special_cohorts" / "C7N_ch1_2_3_template.docx"
 
 
 class TestSpecialCohortTemplate(unittest.TestCase):
-    def test_template_exists(self):
-        self.assertTrue(TPL_PATH.exists(), f"Template not found at {TPL_PATH}")
+    def test_templates_exist(self):
+        self.assertTrue(E7N_TPL_PATH.exists(), f"E7N Template not found at {E7N_TPL_PATH}")
+        self.assertTrue(C7N_TPL_PATH.exists(), f"C7N Template not found at {C7N_TPL_PATH}")
 
-    def test_margins_conformance(self):
-        doc = docx.Document(str(TPL_PATH))
+    def test_e7n_margins_conformance(self):
+        doc = docx.Document(str(E7N_TPL_PATH))
         sec = doc.sections[0]
         self.assertAlmostEqual(sec.top_margin.pt, 64.8, delta=0.5)
         self.assertAlmostEqual(sec.bottom_margin.pt, 50.4, delta=0.5)
         self.assertAlmostEqual(sec.left_margin.pt, 56.7, delta=0.5)
         self.assertAlmostEqual(sec.right_margin.pt, 49.6, delta=0.5)
 
-    def test_docxtpl_render_dynamic_loop(self):
-        tpl = DocxTemplate(str(TPL_PATH))
+    def test_c7n_margins_conformance(self):
+        doc = docx.Document(str(C7N_TPL_PATH))
+        sec = doc.sections[0]
+        self.assertAlmostEqual(sec.top_margin.pt, 64.8, delta=0.5)
+        self.assertAlmostEqual(sec.bottom_margin.pt, 50.4, delta=0.5)
+        self.assertAlmostEqual(sec.left_margin.pt, 56.7, delta=0.5)
+        self.assertAlmostEqual(sec.right_margin.pt, 49.6, delta=0.5)
+
+    def test_e7n_docxtpl_render_dynamic_loop(self):
+        tpl = DocxTemplate(str(E7N_TPL_PATH))
         context = {
             "year": "115",
             "month": "9",
@@ -49,29 +59,60 @@ class TestSpecialCohortTemplate(unittest.TestCase):
             "total_items": "35",
         }
 
-        # Must not raise TemplateSyntaxError or any other exception
         tpl.render(context)
         out_test = REPO_ROOT / "output" / "test_e7n_rendered.docx"
         out_test.parent.mkdir(parents=True, exist_ok=True)
         tpl.save(str(out_test))
 
         rendered = docx.Document(str(out_test))
-        # Verify paragraph replacements
         full_text = "\n".join(p.text for p in rendered.paragraphs)
         self.assertIn("學生人數為23,273人，施測人數為22,191人", full_text)
         self.assertIn("男生11,500人、女生10,691人，整體缺考率約為4.6%", full_text)
         self.assertIn("聽力評量向度包含辨識句意、基本問答及言談理解", full_text)
         self.assertIn("閱讀能力則包含單題及題組", full_text)
 
-        # Verify dynamic table loop
         table = rendered.tables[0]
-        # Header (1) + Data rows (5) + Total row (1) = 7 rows
         self.assertEqual(len(table.rows), 7)
         self.assertEqual(table.rows[1].cells[0].text.strip(), "聽力")
         self.assertEqual(table.rows[1].cells[1].text.strip(), "辨識句意")
         self.assertEqual(table.rows[1].cells[2].text.strip(), "1、2、3")
         self.assertEqual(table.rows[-1].cells[0].text.strip(), "合計")
         self.assertEqual(table.rows[-1].cells[1].text.strip(), "35題")
+
+    def test_c7n_docxtpl_render_taxonomy_table(self):
+        tpl = DocxTemplate(str(C7N_TPL_PATH))
+        context = {
+            "year": "115",
+            "month": "9",
+            "day": "25",
+            "參與縣市_": "桃園市",
+            "參與縣市_final": "",
+            "國字大寫": "一",
+            "enrolled_count": "23,273",
+            "tested_count": "22,223",
+            "boy_count": "11,500",
+            "girl_count": "10,723",
+            "absence_rate": "4.5",
+            "knowledge_count": "12",
+            "reading_count": "18",
+        }
+
+        tpl.render(context)
+        out_test = REPO_ROOT / "output" / "test_c7n_rendered.docx"
+        out_test.parent.mkdir(parents=True, exist_ok=True)
+        tpl.save(str(out_test))
+
+        rendered = docx.Document(str(out_test))
+        full_text = "\n".join(p.text for p in rendered.paragraphs)
+        self.assertIn("學生人數為23,273人，施測人數為22,223人", full_text)
+        self.assertIn("男生11,500人、女生10,723人，整體缺考率約為4.5%", full_text)
+        self.assertIn("學力檢測施測之正式題本總題數為30題", full_text)
+
+        table = rendered.tables[0]
+        # Total 40 rows: Header + 38 taxonomy rows + 1 total row
+        self.assertEqual(len(table.rows), 40)
+        total_cell_text = table.rows[39].cells[1].text
+        self.assertIn("語文知識12題、閱讀理解18題", total_cell_text)
 
 
 if __name__ == "__main__":

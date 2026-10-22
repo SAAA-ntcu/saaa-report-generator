@@ -57,16 +57,19 @@ from source_inputs import missing_statistics
 def generate_special_ch1_2_3(
     template_path: str | Path,
     output_path: str | Path,
+    subject_code: str = "E",
     year: str = "115",
     month: str = "9",
     day: str = "25",
     enrolled_count: str = "23,273",
-    tested_count: str = "22,191",
+    tested_count: str = "22,223",
     boy_count: str = "11,500",
-    girl_count: str = "10,691",
-    absence_rate: str = "4.6",
+    girl_count: str = "10,723",
+    absence_rate: str = "4.5",
+    knowledge_count: str = "12",
+    reading_count: str = "18",
     framework_rows: list[dict[str, str]] | None = None,
-    total_items: str = "35",
+    total_items: str = "30",
 ) -> Path:
     """Renders Special Cohort (e.g. 7N) Chapter 1~3 standardized template via DocxTemplate."""
     from docxtpl import DocxTemplate
@@ -85,18 +88,23 @@ def generate_special_ch1_2_3(
         "month": str(month),
         "day": str(day),
         "當年度參與縣市": "桃園市",
+        "參與縣市_": "桃園市",
+        "參與縣市_final": "",
         "國字大寫": "一",
+        "total_counties_cn": "一",
         "enrolled_count": str(enrolled_count),
         "tested_count": str(tested_count),
         "boy_count": str(boy_count),
         "girl_count": str(girl_count),
         "absence_rate": str(absence_rate),
+        "knowledge_count": str(knowledge_count),
+        "reading_count": str(reading_count),
         "listening_dimensions": "辨識句意、基本問答",
         "listening_dimensions_final": "言談理解",
         "reading_dimensions": "單題",
         "reading_dimensions_final": "題組",
         "framework_rows": framework_rows,
-        "total_items": str(total_items),
+        "total_items": str(total_items) if subject_code.upper() != "C" else "30",
     }
     tpl.render(context)
     out_p = Path(output_path)
@@ -209,7 +217,7 @@ def build_full_report(
 
     if use_special_ch123:
         c123_path = out_dir / f"第1_2_3章_{cohort}{output_suffix}.docx"
-        generate_special_ch1_2_3(special_ch123_tpl, c123_path, year=year)
+        generate_special_ch1_2_3(special_ch123_tpl, c123_path, subject_code=sub_code, year=year)
         assembler.import_external_chapter_docx(c123_path, add_page_break=True)
     else:
         # --- Chapter 1 ---

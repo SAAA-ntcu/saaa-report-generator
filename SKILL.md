@@ -36,7 +36,7 @@ This skill provides an end-to-end automated workflow for producing official Taiw
 
 > [!NOTE]
 > **Special Rules for 7th Grade Entrants (7N / 桃園市七年級新生)**:
-> - **Chapter 1~3 Standardized Template**: For 7N cohorts (e.g. `E7N`), Chapters 1~3 are automatically generated from the dedicated template at `resources/templates/special_cohorts/{cohort}_ch1_2_3_template.docx`. It provides standardized single-county Taoyuan text, official test date, cohort demographics (enrolled, tested, boy/girl, absence rate), and dynamic Jinja2 table looping for Table 3-1 (`{%tr for r in framework_rows %}`).
+> - **Chapter 1~3 Standardized Template**: For 7N cohorts (e.g. `E7N`, `C7N`), Chapters 1~3 are automatically generated from dedicated templates at `resources/templates/special_cohorts/{cohort}_ch1_2_3_template.docx`. They provide standardized single-county Taoyuan text, official test date, cohort demographics (enrolled, tested, boy/girl, absence rate), and official assessment framework matrices for Table 3-1 (dynamic Jinja2 row looping for English, and the 40-row curriculum taxonomy matrix for Chinese).
 > - **Internal Item Codes**: Use grade digit `6` (e.g. `115-C6-A1-01`, `115-M6-D1-01`, `115-E6-A1-01`, `115-S6-A1-01`), representing Grade 6 curriculum scope.
 > - **Exam Title & Preamble**: Dynamically formatted as `[年]年桃園市[科目]七年級新生學習能力檢測`.
 > - **Math Table 6-1 Header**: Top-left merged cell displays `六`.
